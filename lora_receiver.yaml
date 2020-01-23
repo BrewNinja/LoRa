@@ -1,0 +1,73 @@
+esphome:
+  name: lora_receiver
+  platform: ESP32
+  board: heltec_wifi_lora_32_V2
+  includes:
+    - lora_gateway.h
+  libraries:
+    - "LoRa"
+    - "SPI"
+    - "CryptoLW"
+    - "Crypto"
+    - "ArduinoJson-esphomelib"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pass
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Lora Receiver Fallback Hotspot"
+    password: !secret hotspot_pass
+    
+#mqtt:
+#  broker: !secret mqtt_broker
+#  username: !secret mqtt_user
+#  password: !secret mqtt_pass
+
+captive_portal:
+
+web_server:
+  port: 80
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+#api:
+#  password: !secret esphome_password
+
+ota:
+  password: !secret esphome_password
+  
+# Enable SPI for LoRa
+#spi:
+#  clk_pin: GPIO18
+#  mosi_pin: GPIO23
+#  miso_pin: GPIO19
+  
+
+sensor:
+  - platform: custom
+    lambda: |-
+      auto lora_sensor = new MyLoRaSensors();
+      App.register_component(lora_sensor);
+      return {lora_sensor->mbox_sensor_post,
+              lora_sensor->mbox_sensor_msg,
+              lora_sensor->mbox_sensor_rssi,
+              lora_sensor->mbox_sensor_vbat};
+    sensors:
+    - name: "Mailbox"
+      accuracy_decimals: 0
+      icon: mdi:email-box
+    - name: "Mailboxsender: Message #"
+      accuracy_decimals: 0
+      icon: mdi:message-processing-outline
+    - name: "Mailboxsender: Signal"
+      unit_of_measurement: dBm
+      accuracy_decimals: 0
+      icon: mdi:signal
+    - name: "Mailboxsender: Battery"
+      unit_of_measurement: V
+      accuracy_decimals: 3
+      icon: mdi:battery
